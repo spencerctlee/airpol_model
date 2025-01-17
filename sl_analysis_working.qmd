@@ -1,0 +1,294 @@
+---
+title: "Comparison of Air pollution exposure models - RAQDPS-FW and CanOSSEM"
+output: html_document
+---
+
+## Dependencies/Libraries
+
+```{r setup, message = FALSE, warning=FALSE, echo=FALSE}
+library(tidyverse)
+library(lubridate)
+library(stringr)
+library(scales) 
+library(ggthemes)
+library(heemod)
+require(sf)
+
+print("hi")
+```
+
+# Importing data
+
+```{r}
+canossem <- read.csv("./data/canossem_mo_hsda_2012_2022.csv")
+raqdps <- read.csv("./data/raqdps_mo_hsda_2012_2023.csv")
+raqdpsfw <- read.csv("./data/raqdpsfw_mo_hsda_2012_2023.csv")
+
+
+glimpse(canossem)
+```
+
+# Data cleaning and merging models
+
+```{r addingSpatialData, message = FALSE, warning=TRUE, echo=FALSE}
+# Now merging with map:
+canossem <- canossem %>% 
+  mutate(HLTH_SERVICE_DLVR_AREA_CODE = as.character(HLTH_SERVICE_DLVR_AREA_CODE)) %>%
+  select(c("HLTH_SERVICE_DLVR_AREA_CODE", "year", "month", "monthly_smoke", "date")) %>%
+  mutate(date = as.Date(date, format = "%Y-%m-%d")) %>%
+  filter(date >= as.Date("2018-01-01") & date <= as.Date("2022-12-31")) %>%
+  rename("average_mo" = "monthly_smoke") %>%
+  left_join(bcmaps::health_hsda(), by="HLTH_SERVICE_DLVR_AREA_CODE")
+glimpse(canossem)
+
+raqdps <- raqdps %>%
+  select(c("HLTH_SERVICE_DLVR_AREA_NAME", "year", "month", "average_mo", "date")) %>%
+  mutate(date = as.Date(date, format = "%Y-%m-%d")) %>%
+  filter(date >= as.Date("2018-01-01") & date <= as.Date("2022-12-31")) %>%
+  left_join(bcmaps::health_hsda(), by="HLTH_SERVICE_DLVR_AREA_NAME")
+
+glimpse(raqdps)
+
+raqdpsfw <- raqdpsfw %>%
+    select(c("HLTH_SERVICE_DLVR_AREA_NAME", "year", "month", "average_mo", "date")) %>%
+  mutate(date = as.Date(date, format = "%Y-%m-%d")) %>%
+  filter(date >= as.Date("2018-01-01") & date <= as.Date("2022-12-31")) %>%
+  left_join(bcmaps::health_hsda(), by="HLTH_SERVICE_DLVR_AREA_NAME")
+
+glimpse(raqdpsfw)
+
+# Combining
+
+canossem <- canossem %>%
+  mutate(Dataset = "canossem")
+
+raqdpsfw <- raqdpsfw %>%
+  mutate(Dataset = "raqdpsfw")
+
+combined_can_raq <- bind_rows(canossem, raqdpsfw)
+
+joined_can_raq <- canossem %>%
+  select(c("average_mo", "date", "HLTH_SERVICE_DLVR_AREA_NAME")) %>%
+  inner_join(raqdpsfw, by = c("date", "HLTH_SERVICE_DLVR_AREA_NAME"), suffix = c("_canossem", "_raqdpsfw"))
+
+glimpse(joined_can_raq)
+```
+
+# Plot of average monthly PM2.5 values by HSDA (CanOSSEM vs. RAQDPS-FW)
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+#| label: fig-smoke
+#| fig-cap: Daily Smoke Exposure Levels (PM2.5) across BC
+
+
+
+haLineMo <- function (data, title) {
+    ggplot(data) +
+    geom_line(aes(x = date, y = average_mo, colour = HLTH_SERVICE_DLVR_AREA_NAME)) +
+    scale_x_date(date_labels = "%m-%Y", date_breaks = "6 month") +
+    theme_few(base_size = 8) +
+    theme(
+      axis.text.x = element_text(angle = 90, hjust = 1),
+      legend.position = "none"
+    ) +
+    facet_wrap(~ HLTH_SERVICE_DLVR_AREA_NAME) +
+    labs(title = title,
+    x = "",
+    y = "µg/m³")
+}
+
+
+haLineMo(canossem, "CanOSSEM Monthly")
+haLineMo(raqdps, "RAQDPS Monthly")
+haLineMo(raqdpsfw, "RAQDPS-FW Monthly")
+
+
+
+haLineMoCombined <- function(data, title) {
+  ggplot(data) +
+    geom_line(aes(x = date, y = average_mo, colour = Dataset), linewidth = 0.5, alpha = 0.7) +
+    scale_x_date(date_labels = "%m-%Y", date_breaks = "6 month") +
+    scale_colour_manual(values = c(raqdpsfw = "blue3", canossem= "darkorange")) +
+    theme_few(base_size = 8) +
+    theme(
+      axis.text.x = element_text(angle = 90, hjust = 1),
+      legend.position = "right"
+    ) +
+    facet_wrap(~ HLTH_SERVICE_DLVR_AREA_NAME) +
+    labs(title = title,
+    x = "",
+    y = "µg/m³")
+}
+
+plot1 <- haLineMoCombined(combined_can_raq, "CanOSSEM vs. RAQDPS-FW")
+
+ggsave("CanOSSEM vs. RAQDPS-FW, 2018-2022.png", plot1, width = 6, height = 4)
+
+haLineMoCombinedLog <- function(data, title) {
+  ggplot(data) +
+    geom_line(aes(x = date, y = log(average_mo), colour = Dataset), linewidth = 0.5) +
+    scale_x_date(date_labels = "%m-%Y", date_breaks = "6 month") +
+    theme_few(base_size = 8) +
+    theme(
+      axis.text.x = element_text(angle = 90, hjust = 1),
+      legend.position = "right"
+    ) +
+    facet_wrap(~ HLTH_SERVICE_DLVR_AREA_NAME) +
+    labs(title = title,
+    x = "",
+    y = "µg/m³")
+}
+
+haLineMoCombinedLog(combined_can_raq, "Log(CanOSSEM vs. RAQDPS-FW)")
+
+
+```
+
+# Summary Statistics
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+summary_stats1 <- combined_can_raq %>%
+  group_by(Dataset, HLTH_SERVICE_DLVR_AREA_NAME) %>%
+  summarise(
+    mean_pm25 = mean(average_mo, na.rm = TRUE),
+    median_pm25 = median(average_mo, na.rm = TRUE),
+    max_pm25 = max(average_mo, na.rm = TRUE),
+    min_pm25 = min(average_mo, na.rm = TRUE)
+    )
+
+
+summary_stats2 <- joined_can_raq %>%
+  select(date, HLTH_SERVICE_DLVR_AREA_NAME, average_mo_canossem, average_mo_raqdpsfw) %>%
+  mutate(pm25_diff = average_mo_canossem - average_mo_raqdpsfw)
+
+glimpse(summary_stats2)
+
+
+# Plots line plot of differences
+plot2 <- ggplot(summary_stats2, aes(x = date, y = pm25_diff)) +
+  geom_line(colour = "black", linewidth = 0.5) +
+  geom_hline(yintercept = 0, color = "blue", linetype = "solid", linewidth = 0.3, alpha = 0.65) +
+  scale_x_date(date_labels = "%m-%Y", date_breaks = "6 month") +
+  theme_few(base_size = 8) +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1),
+    legend.position = "right"
+  ) +
+  facet_wrap(~ HLTH_SERVICE_DLVR_AREA_NAME) +
+  xlab("Date") +
+  ylab("Difference in Monthly Smoke Exposure (µg/m³)") +
+  ggtitle("Difference in Monthly Smoke Exposure Between Canossem and Raqdpsfw")
+
+ggsave("CanOSSEM vs. RAQDPS-FW differences, 2018-2022.png", plot2, width = 6, height = 4)
+
+# Scatter plot of difference between pm25 level
+
+scatter_all <- ggplot(summary_stats2, aes(x = average_mo_canossem, y = average_mo_raqdpsfw)) +
+  geom_point(size = 1) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "black") +
+  theme_few() +
+  xlab("CanOSSEM Monthly Smoke (ug/m³)") +
+  ylab("RAQDPS-FW Monthly Smoek (ug/m³)") +
+  ggtitle("Scatter Plot of Monthly Smoke Exposure Comparison - CanOSSEM vs. RAQDPS-FW")
+
+scatter_all
+
+scatter_hsda <- ggplot(summary_stats2, aes(x = average_mo_canossem, y = average_mo_raqdpsfw)) +
+  geom_point(aes(color = HLTH_SERVICE_DLVR_AREA_NAME), size = 1) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "black") +
+  theme_classic() +
+  xlab("CanOSSEM Monthly Smoke (ug/m³)") +
+  ylab("RAQDPS-FW Monthly Smoek (ug/m³)") +
+  ggtitle("Scatter Plot of Monthly Smoke Exposure Comparison by HSDA - CanOSSEM vs. RAQDPS-FW")
+
+scatter_hsda
+
+```
+
+# Pearson and Spearman results
+
+## Pearson (r)
+
+A correlation of r = 0.722 (strong) relationship between CanOSSEM and RAQDPS-FW on a monthly time frame.
+
+The air pollution predictions are moving together linearly. Magnitude is consistent.
+
+## Spearman (rho)
+
+A correlation of rho = 0.010 (very weak) monotonic relationship between CanOSSEM and RAQDPS-FW modeled levels of exposure. Since spearman is a ranking correlation, the relative magnitude of PM25 estimates are not strongly correlated.
+
+They question is whether these correlations are similar across different comparisons in literature?
+
+```{r}
+airpoll_pearson <- cor.test(joined_can_raq$average_mo_canossem, joined_can_raq$average_mo_raqdpsfw,
+                             method = "pearson")
+
+airpoll_spearman <- cor.test(joined_can_raq$average_mo_canossem, joined_can_raq$average_mo_raqdpsfw,
+                             method = "spearman")
+
+airpoll_pearson
+airpoll_spearman
+
+```
+
+# Testing assumptions
+
+The qqplot (testing normal distribution assumption) looks skewed to the right for both CanOSSEM and RAQDPS-FW.
+
+A log-transform looks more appropriate for both CanOSSEM and RAQDPS-FW
+
+```{r}
+# Linearity (qqplot)
+qqnorm(joined_can_raq$average_mo_canossem)
+
+qqnorm(log(joined_can_raq$average_mo_canossem))
+
+qqnorm(joined_can_raq$average_mo_raqdpsfw)
+
+qqnorm(log(joined_can_raq$average_mo_raqdpsfw))
+```
+
+# Trying some regression
+
+```{r}
+lm_air <- lm(joined_can_raq$average_mo_canossem ~ joined_can_raq$average_mo_raqdpsfw)
+
+summary(lm_air)
+
+qqnorm(residuals(lm_air))
+qqline(residuals(lm_air))
+
+
+lm_air_log <- lm(log(joined_can_raq$average_mo_canossem) ~ log(joined_can_raq$average_mo_raqdpsfw))
+
+summary(lm_air_log)
+qqnorm(residuals(lm_air_log))
+qqline(residuals(lm_air_log))
+
+```
+
+# Bland-Altman plot (difference in mean values)
+
+```{r}
+joined_can_raq2 <- joined_can_raq %>%
+  mutate(mean_values = (average_mo_canossem + average_mo_raqdpsfw) / 2,
+         diff_values = average_mo_canossem - average_mo_raqdpsfw)
+
+mean_diff <- mean(joined_can_raq2$diff_values, na.rm = TRUE)
+sd_diff <- sd(joined_can_raq2$diff_values, na.rm = TRUE)
+
+upper_limit <- mean_diff + (1.96 * sd_diff)
+lower_limit <- mean_diff - (1.96 * sd_diff)
+
+ggplot(joined_can_raq2, aes(x = mean_values, y = diff_values)) +
+  geom_point(alpha = 0.6) +  # Scatter plot of differences vs means
+  geom_hline(yintercept = mean_diff, linetype = "solid", color = "blue") +  # Bias line
+  geom_hline(yintercept = upper_limit, linetype = "dashed", color = "red") +  # Upper limit of agreement
+  geom_hline(yintercept = lower_limit, linetype = "dashed", color = "red") +  # Lower limit of agreement
+  labs(title = "Bland-Altman Plot: CanOSSEM vs RAQDPS-FW",
+       x = "Mean of Canossem and RAQDPS-FW",
+       y = "Difference between Canossem and RAQDPS-FW") +
+  theme_few()
+```
+
+For the majority of data, both CanOSSEM and RAQDPS-FW seem to be in reasonable agreement, most points fall within the limits of agreement (1 sd in +/-) and produce similar results. Differences are greatest at higher pollution levels.

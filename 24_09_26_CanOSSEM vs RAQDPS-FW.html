@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.433">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Comparison of Air pollution exposure models - RAQDPS-FW and CanOSSEM</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="sl_analysis_working_files/libs/clipboard/clipboard.min.js"></script>
+<script src="sl_analysis_working_files/libs/quarto-html/quarto.js"></script>
+<script src="sl_analysis_working_files/libs/quarto-html/popper.min.js"></script>
+<script src="sl_analysis_working_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="sl_analysis_working_files/libs/quarto-html/anchor.min.js"></script>
+<link href="sl_analysis_working_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="sl_analysis_working_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="sl_analysis_working_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="sl_analysis_working_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="sl_analysis_working_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Comparison of Air pollution exposure models - RAQDPS-FW and CanOSSEM</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="dependencieslibraries" class="level2">
+<h2 class="anchored" data-anchor-id="dependencieslibraries">Dependencies/Libraries</h2>
+</section>
+<section id="importing-data" class="level1">
+<h1>Importing data</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>canossem <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"./data/canossem_mo_hsda_2012_2022.csv"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>raqdps <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"./data/raqdps_mo_hsda_2012_2023.csv"</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>raqdpsfw <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"./data/raqdpsfw_mo_hsda_2012_2023.csv"</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(canossem)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 2,112
+Columns: 6
+$ X                           &lt;int&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,…
+$ HLTH_SERVICE_DLVR_AREA_CODE &lt;int&gt; 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11…
+$ year                        &lt;int&gt; 2012, 2012, 2012, 2012, 2012, 2012, 2012, …
+$ month                       &lt;int&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, …
+$ monthly_smoke               &lt;dbl&gt; 8.491782, 9.066194, 7.394915, 6.377788, 5.…
+$ date                        &lt;chr&gt; "2012-01-01", "2012-02-01", "2012-03-01", …</code></pre>
+</div>
+</div>
+</section>
+<section id="data-cleaning-and-merging-models" class="level1">
+<h1>Data cleaning and merging models</h1>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 960
+Columns: 18
+$ HLTH_SERVICE_DLVR_AREA_CODE &lt;chr&gt; "11", "11", "11", "11", "11", "11", "11", …
+$ year                        &lt;int&gt; 2018, 2018, 2018, 2018, 2018, 2018, 2018, …
+$ month                       &lt;int&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, …
+$ average_mo                  &lt;dbl&gt; 8.833910, 8.690479, 8.287176, 7.269358, 6.…
+$ date                        &lt;date&gt; 2018-01-01, 2018-02-01, 2018-03-01, 2018-…
+$ id                          &lt;chr&gt; "WHSE_ADMIN_BOUNDARIES.BCHA_HEALTH_SERV_DE…
+$ HLTH_HSDA_SYSID             &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
+$ HLTH_SERVICE_DLVR_AREA_NAME &lt;chr&gt; "East Kootenay", "East Kootenay", "East Ko…
+$ HLTH_SERVICE_DLVR_AREA_ID   &lt;chr&gt; "11 EK", "11 EK", "11 EK", "11 EK", "11 EK…
+$ HLTH_AUTHORITY_CODE         &lt;chr&gt; "1", "1", "1", "1", "1", "1", "1", "1", "1…
+$ HLTH_AUTHORITY_NAME         &lt;chr&gt; "Interior", "Interior", "Interior", "Inter…
+$ HLTH_AUTHORITY_ID           &lt;chr&gt; "1 IHA", "1 IHA", "1 IHA", "1 IHA", "1 IHA…
+$ FEATURE_CODE                &lt;chr&gt; "FH10000200", "FH10000200", "FH10000200", …
+$ FEATURE_AREA_SQM            &lt;dbl&gt; 44984695870, 44984695870, 44984695870, 449…
+$ FEATURE_LENGTH_M            &lt;dbl&gt; 1721941, 1721941, 1721941, 1721941, 172194…
+$ OBJECTID                    &lt;int&gt; 321, 321, 321, 321, 321, 321, 321, 321, 32…
+$ SE_ANNO_CAD_DATA            &lt;chr&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
+$ geometry                    &lt;POLYGON [m]&gt; POLYGON ((1542406 861035.9,..., PO…</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 960
+Columns: 18
+$ HLTH_SERVICE_DLVR_AREA_NAME &lt;chr&gt; "Central Vancouver Island", "Central Vanco…
+$ year                        &lt;int&gt; 2018, 2019, 2020, 2021, 2022, 2018, 2019, …
+$ month                       &lt;int&gt; 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, …
+$ average_mo                  &lt;dbl&gt; 1.1823266, 1.8982887, 0.6025444, 1.0088832…
+$ date                        &lt;date&gt; 2018-01-01, 2019-01-01, 2020-01-01, 2021-…
+$ id                          &lt;chr&gt; "WHSE_ADMIN_BOUNDARIES.BCHA_HEALTH_SERV_DE…
+$ HLTH_HSDA_SYSID             &lt;int&gt; 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12…
+$ HLTH_SERVICE_DLVR_AREA_CODE &lt;chr&gt; "42", "42", "42", "42", "42", "42", "42", …
+$ HLTH_SERVICE_DLVR_AREA_ID   &lt;chr&gt; "42 CVI", "42 CVI", "42 CVI", "42 CVI", "4…
+$ HLTH_AUTHORITY_CODE         &lt;chr&gt; "4", "4", "4", "4", "4", "4", "4", "4", "4…
+$ HLTH_AUTHORITY_NAME         &lt;chr&gt; "Vancouver Island", "Vancouver Island", "V…
+$ HLTH_AUTHORITY_ID           &lt;chr&gt; "4 VIHA", "4 VIHA", "4 VIHA", "4 VIHA", "4…
+$ FEATURE_CODE                &lt;chr&gt; "FH10000200", "FH10000200", "FH10000200", …
+$ FEATURE_AREA_SQM            &lt;dbl&gt; 12597986421, 12597986421, 12597986421, 125…
+$ FEATURE_LENGTH_M            &lt;dbl&gt; 2982627, 2982627, 2982627, 2982627, 298262…
+$ OBJECTID                    &lt;int&gt; 332, 332, 332, 332, 332, 332, 332, 332, 33…
+$ SE_ANNO_CAD_DATA            &lt;chr&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
+$ geometry                    &lt;MULTIPOLYGON [m]&gt; MULTIPOLYGON (((1005879 454..…</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 816
+Columns: 18
+$ HLTH_SERVICE_DLVR_AREA_NAME &lt;chr&gt; "Central Vancouver Island", "Central Vanco…
+$ year                        &lt;int&gt; 2021, 2022, 2021, 2022, 2018, 2020, 2021, …
+$ month                       &lt;int&gt; 1, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, …
+$ average_mo                  &lt;dbl&gt; 1.0508371, 1.6388784, 0.6337970, 0.8760472…
+$ date                        &lt;date&gt; 2021-01-01, 2022-01-01, 2021-02-01, 2022-…
+$ id                          &lt;chr&gt; "WHSE_ADMIN_BOUNDARIES.BCHA_HEALTH_SERV_DE…
+$ HLTH_HSDA_SYSID             &lt;int&gt; 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12…
+$ HLTH_SERVICE_DLVR_AREA_CODE &lt;chr&gt; "42", "42", "42", "42", "42", "42", "42", …
+$ HLTH_SERVICE_DLVR_AREA_ID   &lt;chr&gt; "42 CVI", "42 CVI", "42 CVI", "42 CVI", "4…
+$ HLTH_AUTHORITY_CODE         &lt;chr&gt; "4", "4", "4", "4", "4", "4", "4", "4", "4…
+$ HLTH_AUTHORITY_NAME         &lt;chr&gt; "Vancouver Island", "Vancouver Island", "V…
+$ HLTH_AUTHORITY_ID           &lt;chr&gt; "4 VIHA", "4 VIHA", "4 VIHA", "4 VIHA", "4…
+$ FEATURE_CODE                &lt;chr&gt; "FH10000200", "FH10000200", "FH10000200", …
+$ FEATURE_AREA_SQM            &lt;dbl&gt; 12597986421, 12597986421, 12597986421, 125…
+$ FEATURE_LENGTH_M            &lt;dbl&gt; 2982627, 2982627, 2982627, 2982627, 298262…
+$ OBJECTID                    &lt;int&gt; 332, 332, 332, 332, 332, 332, 332, 332, 33…
+$ SE_ANNO_CAD_DATA            &lt;chr&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
+$ geometry                    &lt;MULTIPOLYGON [m]&gt; MULTIPOLYGON (((1005879 454..…</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 816
+Columns: 20
+$ average_mo_canossem         &lt;dbl&gt; 8.287176, 7.269358, 6.492557, 6.393615, 8.…
+$ date                        &lt;date&gt; 2018-03-01, 2018-04-01, 2018-05-01, 2018-…
+$ HLTH_SERVICE_DLVR_AREA_NAME &lt;chr&gt; "East Kootenay", "East Kootenay", "East Ko…
+$ year                        &lt;int&gt; 2018, 2018, 2018, 2018, 2018, 2018, 2018, …
+$ month                       &lt;int&gt; 3, 4, 5, 6, 7, 8, 9, 10, 11, 4, 5, 6, 7, 8…
+$ average_mo_raqdpsfw         &lt;dbl&gt; 0.5471414, 0.6716308, 1.6900884, 0.8440516…
+$ id                          &lt;chr&gt; "WHSE_ADMIN_BOUNDARIES.BCHA_HEALTH_SERV_DE…
+$ HLTH_HSDA_SYSID             &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
+$ HLTH_SERVICE_DLVR_AREA_CODE &lt;chr&gt; "11", "11", "11", "11", "11", "11", "11", …
+$ HLTH_SERVICE_DLVR_AREA_ID   &lt;chr&gt; "11 EK", "11 EK", "11 EK", "11 EK", "11 EK…
+$ HLTH_AUTHORITY_CODE         &lt;chr&gt; "1", "1", "1", "1", "1", "1", "1", "1", "1…
+$ HLTH_AUTHORITY_NAME         &lt;chr&gt; "Interior", "Interior", "Interior", "Inter…
+$ HLTH_AUTHORITY_ID           &lt;chr&gt; "1 IHA", "1 IHA", "1 IHA", "1 IHA", "1 IHA…
+$ FEATURE_CODE                &lt;chr&gt; "FH10000200", "FH10000200", "FH10000200", …
+$ FEATURE_AREA_SQM            &lt;dbl&gt; 44984695870, 44984695870, 44984695870, 449…
+$ FEATURE_LENGTH_M            &lt;dbl&gt; 1721941, 1721941, 1721941, 1721941, 172194…
+$ OBJECTID                    &lt;int&gt; 321, 321, 321, 321, 321, 321, 321, 321, 32…
+$ SE_ANNO_CAD_DATA            &lt;chr&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
+$ geometry                    &lt;POLYGON [m]&gt; POLYGON ((1542406 861035.9,..., PO…
+$ Dataset                     &lt;chr&gt; "raqdpsfw", "raqdpsfw", "raqdpsfw", "raqdp…</code></pre>
+</div>
+</div>
+</section>
+<section id="plot-of-average-monthly-pm2.5-values-by-hsda-canossem-vs.-raqdps-fw" class="level1">
+<h1>Plot of average monthly PM2.5 values by HSDA (CanOSSEM vs.&nbsp;RAQDPS-FW)</h1>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-smoke-1" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="sl_analysis_working_files/figure-html/fig-smoke-1.png" class="img-fluid figure-img" width="672"></p>
+<figcaption class="figure-caption">Figure&nbsp;1: Daily Smoke Exposure Levels (PM2.5) across BC</figcaption>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div id="fig-smoke-2" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="sl_analysis_working_files/figure-html/fig-smoke-2.png" class="img-fluid figure-img" width="672"></p>
+<figcaption class="figure-caption">Figure&nbsp;2: Daily Smoke Exposure Levels (PM2.5) across BC</figcaption>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div id="fig-smoke-3" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="sl_analysis_working_files/figure-html/fig-smoke-3.png" class="img-fluid figure-img" width="672"></p>
+<figcaption class="figure-caption">Figure&nbsp;3: Daily Smoke Exposure Levels (PM2.5) across BC</figcaption>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div id="fig-smoke-4" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="sl_analysis_working_files/figure-html/fig-smoke-4.png" class="img-fluid figure-img" width="672"></p>
+<figcaption class="figure-caption">Figure&nbsp;4: Daily Smoke Exposure Levels (PM2.5) across BC</figcaption>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div id="fig-smoke-5" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="sl_analysis_working_files/figure-html/fig-smoke-5.png" class="img-fluid figure-img" width="672"></p>
+<figcaption class="figure-caption">Figure&nbsp;5: Daily Smoke Exposure Levels (PM2.5) across BC</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="summary-statistics" class="level1">
+<h1>Summary Statistics</h1>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 816
+Columns: 5
+$ date                        &lt;date&gt; 2018-03-01, 2018-04-01, 2018-05-01, 2018-…
+$ HLTH_SERVICE_DLVR_AREA_NAME &lt;chr&gt; "East Kootenay", "East Kootenay", "East Ko…
+$ average_mo_canossem         &lt;dbl&gt; 8.287176, 7.269358, 6.492557, 6.393615, 8.…
+$ average_mo_raqdpsfw         &lt;dbl&gt; 0.5471414, 0.6716308, 1.6900884, 0.8440516…
+$ pm25_diff                   &lt;dbl&gt; 7.740034, 6.597727, 4.802469, 5.549563, 6.…</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="sl_analysis_working_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="sl_analysis_working_files/figure-html/unnamed-chunk-3-2.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="sl_analysis_working_files/figure-html/unnamed-chunk-3-3.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="pearson-and-spearman-results" class="level1">
+<h1>Pearson and Spearman results</h1>
+<section id="pearson-r" class="level2">
+<h2 class="anchored" data-anchor-id="pearson-r">Pearson (r)</h2>
+<p>A correlation of r = 0.722 (strong) relationship between CanOSSEM and RAQDPS-FW on a monthly time frame.</p>
+<p>The air pollution predictions are moving together linearly. Magnitude is consistent.</p>
+</section>
+<section id="spearman-rho" class="level2">
+<h2 class="anchored" data-anchor-id="spearman-rho">Spearman (rho)</h2>
+<p>A correlation of rho = 0.010 (very weak) monotonic relationship between CanOSSEM and RAQDPS-FW modeled levels of exposure. Since spearman is a ranking correlation, the relative magnitude of PM25 estimates are not strongly correlated.</p>
+<p>They question is whether these correlations are similar across different comparisons in literature?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>airpoll_pearson <span class="ot">&lt;-</span> <span class="fu">cor.test</span>(joined_can_raq<span class="sc">$</span>average_mo_canossem, joined_can_raq<span class="sc">$</span>average_mo_raqdpsfw,</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>                             <span class="at">method =</span> <span class="st">"pearson"</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>airpoll_spearman <span class="ot">&lt;-</span> <span class="fu">cor.test</span>(joined_can_raq<span class="sc">$</span>average_mo_canossem, joined_can_raq<span class="sc">$</span>average_mo_raqdpsfw,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>                             <span class="at">method =</span> <span class="st">"spearman"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in cor.test.default(joined_can_raq$average_mo_canossem,
+joined_can_raq$average_mo_raqdpsfw, : Cannot compute exact p-value with ties</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>airpoll_pearson</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Pearson's product-moment correlation
+
+data:  joined_can_raq$average_mo_canossem and joined_can_raq$average_mo_raqdpsfw
+t = 29.806, df = 814, p-value &lt; 2.2e-16
+alternative hypothesis: true correlation is not equal to 0
+95 percent confidence interval:
+ 0.6878639 0.7536574
+sample estimates:
+      cor 
+0.7223916 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>airpoll_spearman</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Spearman's rank correlation rho
+
+data:  joined_can_raq$average_mo_canossem and joined_can_raq$average_mo_raqdpsfw
+S = 81511974, p-value = 0.004293
+alternative hypothesis: true rho is not equal to 0
+sample estimates:
+       rho 
+0.09987497 </code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="testing-assumptions" class="level1">
+<h1>Testing assumptions</h1>
+<p>The qqplot (testing normal distribution assumption) looks skewed to the right for both CanOSSEM and RAQDPS-FW.</p>
+<p>A log-transform looks more appropriate for both CanOSSEM and RAQDPS-FW</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Linearity (qqplot)</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">qqnorm</span>(joined_can_raq<span class="sc">$</span>average_mo_canossem)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="sl_analysis_working_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qqnorm</span>(<span class="fu">log</span>(joined_can_raq<span class="sc">$</span>average_mo_canossem))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="sl_analysis_working_files/figure-html/unnamed-chunk-5-2.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qqnorm</span>(joined_can_raq<span class="sc">$</span>average_mo_raqdpsfw)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="sl_analysis_working_files/figure-html/unnamed-chunk-5-3.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qqnorm</span>(<span class="fu">log</span>(joined_can_raq<span class="sc">$</span>average_mo_raqdpsfw))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="sl_analysis_working_files/figure-html/unnamed-chunk-5-4.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="trying-some-regression" class="level1">
+<h1>Trying some regression</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>lm_air <span class="ot">&lt;-</span> <span class="fu">lm</span>(joined_can_raq<span class="sc">$</span>average_mo_canossem <span class="sc">~</span> joined_can_raq<span class="sc">$</span>average_mo_raqdpsfw)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(lm_air)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = joined_can_raq$average_mo_canossem ~ joined_can_raq$average_mo_raqdpsfw)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-19.228  -1.139  -0.106   1.298  46.385 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)                         6.32586    0.13837   45.72   &lt;2e-16 ***
+joined_can_raq$average_mo_raqdpsfw  0.47472    0.01593   29.81   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 3.518 on 814 degrees of freedom
+Multiple R-squared:  0.5218,    Adjusted R-squared:  0.5213 
+F-statistic: 888.4 on 1 and 814 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qqnorm</span>(<span class="fu">residuals</span>(lm_air))</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">qqline</span>(<span class="fu">residuals</span>(lm_air))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="sl_analysis_working_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>lm_air_log <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="fu">log</span>(joined_can_raq<span class="sc">$</span>average_mo_canossem) <span class="sc">~</span> <span class="fu">log</span>(joined_can_raq<span class="sc">$</span>average_mo_raqdpsfw))</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(lm_air_log)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = log(joined_can_raq$average_mo_canossem) ~ log(joined_can_raq$average_mo_raqdpsfw))
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.49511 -0.17636 -0.05352  0.12937  2.06699 
+
+Coefficients:
+                                        Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)                             2.011901   0.010160  198.03   &lt;2e-16
+log(joined_can_raq$average_mo_raqdpsfw) 0.069935   0.007217    9.69   &lt;2e-16
+                                           
+(Intercept)                             ***
+log(joined_can_raq$average_mo_raqdpsfw) ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.2774 on 814 degrees of freedom
+Multiple R-squared:  0.1034,    Adjusted R-squared:  0.1023 
+F-statistic:  93.9 on 1 and 814 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qqnorm</span>(<span class="fu">residuals</span>(lm_air_log))</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">qqline</span>(<span class="fu">residuals</span>(lm_air_log))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="sl_analysis_working_files/figure-html/unnamed-chunk-6-2.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="bland-altman-plot-difference-in-mean-values" class="level1">
+<h1>Bland-Altman plot (difference in mean values)</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>joined_can_raq2 <span class="ot">&lt;-</span> joined_can_raq <span class="sc">%&gt;%</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">mean_values =</span> (average_mo_canossem <span class="sc">+</span> average_mo_raqdpsfw) <span class="sc">/</span> <span class="dv">2</span>,</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">diff_values =</span> average_mo_canossem <span class="sc">-</span> average_mo_raqdpsfw)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>mean_diff <span class="ot">&lt;-</span> <span class="fu">mean</span>(joined_can_raq2<span class="sc">$</span>diff_values, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>sd_diff <span class="ot">&lt;-</span> <span class="fu">sd</span>(joined_can_raq2<span class="sc">$</span>diff_values, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>upper_limit <span class="ot">&lt;-</span> mean_diff <span class="sc">+</span> (<span class="fl">1.96</span> <span class="sc">*</span> sd_diff)</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>lower_limit <span class="ot">&lt;-</span> mean_diff <span class="sc">-</span> (<span class="fl">1.96</span> <span class="sc">*</span> sd_diff)</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(joined_can_raq2, <span class="fu">aes</span>(<span class="at">x =</span> mean_values, <span class="at">y =</span> diff_values)) <span class="sc">+</span></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.6</span>) <span class="sc">+</span>  <span class="co"># Scatter plot of differences vs means</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> mean_diff, <span class="at">linetype =</span> <span class="st">"solid"</span>, <span class="at">color =</span> <span class="st">"blue"</span>) <span class="sc">+</span>  <span class="co"># Bias line</span></span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> upper_limit, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span>  <span class="co"># Upper limit of agreement</span></span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> lower_limit, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span>  <span class="co"># Lower limit of agreement</span></span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Bland-Altman Plot: Canossem vs RAQDPS-FW"</span>,</span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Mean of Canossem and RAQDPS-FW"</span>,</span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Difference between Canossem and RAQDPS-FW"</span>) <span class="sc">+</span></span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_few</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="sl_analysis_working_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>For the majority of data, both CanOSSEM and RAQDPS-FW seem to be in reasonable agreement, most points fall within the limits of agreement (1 sd in +/-) and produce similar results. Differences are greatest at higher pollution levels.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
